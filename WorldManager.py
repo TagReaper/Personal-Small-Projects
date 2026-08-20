@@ -273,26 +273,34 @@ def Update_Bounties(b, days):
     for dex, line in enumerate(Bounties):
         if "[[" in line:
             player = line[2:-6] 
-            # playerDex = dex
-            # bountyDex = 0
+            playerDex = dex
+            bountyDex = 0
         elif line[0] != "#":
-            pass
-            # bountyDex += 1
-            # num = heat - days
-            # remainingBounty = bounty
-            # if num > 0:
-                # remaining heat = num
-            # else:
-                # remaining heat = 0
-                # remaningBounty -= (-num) * 15
-            #if remainingBounty > 0:
-                # bounty = remainingBounty
-            #else:
-                # removeArray.append([player, playerDex, bountyDex])
-    for item in removeArray:
-        Remove_Bounty(b, item[0], item[1], item[2])
+            bountyDex += 1
+            
+            #Extracting heat time remaining
+            heat = int(line.partition("Heat Time: ")[2][0:-6])
+            num = int(heat - days)
+            
+            #Extracting remaining bounty
+            remainingBounty = int(line.partition(" | ")[2].partition(" | ")[0][0:-2])
+            if num > 0:
+                heat = num
+            else:
+                heat = 0
+                remainingBounty -= (-num) * 15
+            if remainingBounty > 0:
+                bounty = remainingBounty
+                new_line = line.partition(" | ")[0] + " | " + str(bounty) + "cp | " + line.partition("cp | ")[2].partition("Time: ")[0] + "Time: " + str(heat) + " days)\n"
+                Bounties[dex] = new_line
+            else:
+                removeArray.append([player, playerDex, bountyDex])
+            print("Remaining Heat:",heat,"\t Bounty:",remainingBounty)
+    print("Removals:",removeArray)
     
-    
+    # For each item in the remove array, it removes the item from the bounty list
+    # for item in removeArray: (MUST GO IN REVERSE ORDER TO FUNCTION)
+        # Remove_Bounty(b, item[0], item[1], item[2])    
 
 def Display_Bounties(b, player):
     with open(b, 'r', encoding='utf-8') as file:
@@ -336,14 +344,14 @@ def Remove_Bounty(b, player, idex, select):
 
 def main():
     cont = True
-    
+        
     # Gathering Paths
     data_folder = Path("C:/Users/lucas/Documents/Buratah")
     Bounties = data_folder / "Campaign Notes" / "Bounties.md"
     Current_Info = data_folder / "Campaign Notes" / "Homebrew & World Rules.md" 
       
     print("Welcome to you very own DnD world manager!\n")
-
+    
     while cont: #Repeating application until valid response and confirmation
         ans = input("Would you like to see the current date, advance the days, make a bounty, clear a bounty, or close the application?\n(1,2,3,4,5):  ")
         
