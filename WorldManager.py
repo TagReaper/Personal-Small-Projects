@@ -501,7 +501,7 @@ def main():
                     print("\nWhich bounty would you like to remove from " + str(removal) + "?")
                     disp = Display_Bounties(Bounties, removal)
                     print(disp[1])
-                    if disp[1] != "\nThis player has no bounties.\n":
+                    if disp[1] != "--------------No Bounties--------------\n":
                         ans = input("Please type a number:   ")
                         try:
                             if int(ans) > 0:
@@ -511,6 +511,8 @@ def main():
                                 print("\nCanceling bounty removal...\n")
                         except:
                             print("\nInvalid Input...\nCanceling bounty removal...\n")
+                    else:
+                        print("\nCanceling bounty removal...\n")
                     
                 else:
                     print("\nCanceling bounty removal...\n")    
