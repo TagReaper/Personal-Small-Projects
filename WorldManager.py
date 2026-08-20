@@ -128,7 +128,7 @@ def Calculate_Weather(m):
                 return Cold_Weather[3]
             elif (i<90):
                 return Cold_Weather[4]
-            elif (i<100):
+            elif (i<=100):
                 return Cold_Weather[5]
         case 1 | 9 | 10 | 13: # Cool
             if (i<15):
@@ -139,7 +139,7 @@ def Calculate_Weather(m):
                 return Cool_Weather[2]
             elif (i<80):
                 return Cool_Weather[3]
-            elif (i<100):
+            elif (i<=100):
                 return Cool_Weather[4]
         case 2 | 3 | 4 | 7 | 8: # Warm
             if (i<15):
@@ -150,7 +150,7 @@ def Calculate_Weather(m):
                 return Warm_Weather[2]
             elif (i<80):
                 return Warm_Weather[3]
-            elif (i<100):
+            elif (i<=100):
                 return Warm_Weather[4]
         case 5 | 6: # Hot
             if (i<10):
@@ -165,7 +165,7 @@ def Calculate_Weather(m):
                 return Hot_Weather[4]
             elif (i<95):
                 return Hot_Weather[5]
-            elif (i<100):
+            elif (i<=100):
                 return Hot_Weather[6]
 
 def Advance_Day(a, b, num):
@@ -173,38 +173,39 @@ def Advance_Day(a, b, num):
     with open(a, 'r', encoding='utf-8') as file:
         Info = file.readlines()
         
-    days = (int(Info[17][22:24]))*28 + int(Info[17][25:27])
+    days = (int(Info[17][22:24])-1)*28 + int(Info[17][25:27])
     
     year = int(Info[17][28:32])
     days = days - 1 + num
-    
+        
     while (days > 364):
         days = days - 364
         year = year + 1
     
-    month = int((days)/28)
-    day = str(int(days%28)+1)
-    
-    if (days%28+1) < 10:
-        day = str(0) + day
+    month = int((days)/28+1)
+    day = str(int(days)%28+1)
+        
+    if int(day) < 10:
+        day = str(0) + str(day)
     
     if month < 10:
         month = str(0) + str(month)
             
     #Converts days into Date
-    Date_Nums =  month + "-" + day + "-" + str(year)
+    Date_Nums =  str(month) + "-" + day + "-" + str(year)
     
     #Converts days into Date in speaking terms
-    Date_Text = Months[int((days)/28)-1] + " " + day + ", " + str(year)
+    Date_Text = Months[int((days)/28)] + " " + day + ", " + str(year)
     
     Info[17] = "[[Secret of Alania]]: " + Date_Nums + " | " + Date_Text + "\n"
     Info[18] = "Season: " + Seasons[int(days/91)] + "\n"
-    Info[19] = "Weather: " + str(Calculate_Weather(int((days)/28))) + "\n"
+    Info[19] = "Weather: " + str(Calculate_Weather(int(month))) + "\n"
     
     with open(a, 'w', encoding='utf-8') as file:
          file.writelines(Info)
          
     #Update Bounties
+    Update_Bounties(b, num)
         
     linecache.checkcache(str(a))
     linecache.checkcache(str(b))    
@@ -272,7 +273,7 @@ def Update_Bounties(b, days):
     removeArray = []
     for dex, line in enumerate(Bounties):
         if "[[" in line:
-            player = line[2:-6] 
+            player = line[2:-7] 
             playerDex = dex
             bountyDex = 0
         elif line[0] != "#":
@@ -295,12 +296,21 @@ def Update_Bounties(b, days):
                 Bounties[dex] = new_line
             else:
                 removeArray.append([player, playerDex, bountyDex])
-            print("Remaining Heat:",heat,"\t Bounty:",remainingBounty)
-    print("Removals:",removeArray)
+    
+    # Updates changed bounties
+        with open(b, "w", encoding="utf-8") as file:
+                file.writelines(Bounties) 
+            
+        linecache.checkcache(str(b)) 
     
     # For each item in the remove array, it removes the item from the bounty list
-    # for item in removeArray: (MUST GO IN REVERSE ORDER TO FUNCTION)
-        # Remove_Bounty(b, item[0], item[1], item[2])    
+    for item in reversed(removeArray): #(MUST GO IN REVERSE ORDER TO FUNCTION)
+        Remove_Bounty(b, item[0], item[1], item[2])  
+    
+    #Display bounties for each player
+    for player in Players:
+        print(player + "'s bounties:")
+        print(Display_Bounties(b, player)[1])
 
 def Display_Bounties(b, player):
     with open(b, 'r', encoding='utf-8') as file:
@@ -315,13 +325,13 @@ def Display_Bounties(b, player):
                 bounties = int(line[-2:])  
                 idex = dex
                 if bounties != 0:
-                    display = "----------------Bounty----------------\n"
+                    display = "----------------Bounty----------------"
             elif bounties > 0:
-                display += str(nums) + ".     " + str(line) + "\n"
+                display += "\n" + str(nums) + ".     " + str(line)
                 bounties -= 1
                 nums += 1
     if display == "":
-        return(idex, "\nThis player has no bounties.\n")
+        return(idex, "--------------No Bounties--------------\n")
     else:
         return(idex, display)
 
@@ -353,7 +363,7 @@ def main():
     print("Welcome to you very own DnD world manager!\n")
     
     while cont: #Repeating application until valid response and confirmation
-        ans = input("Would you like to see the current date, advance the days, make a bounty, clear a bounty, or close the application?\n(1,2,3,4,5):  ")
+        ans = input("Would you like to see the current date, advance the days, make a bounty, clear a player's bounty, view all bounties, or close the application?\n(1,2,3,4,5,6):  ")
         
         match ans:
             case "1":
@@ -363,31 +373,31 @@ def main():
                     days = input("\nHow many days do you want to advance by?   ")
                     
                     # Error checking for invalid type
-                    try:
-                        confirm = True
-                        while confirm:
-                            inp = "Is this the days intended -> " + str(int(days)) + "? (Y or N)   "
-                            ans = input(inp)
-                            match ans:
-                                case "Y":
-                                    confirm = False
-                                    if int(days) <= 0:
-                                        print("\nCanceling day progression...\n")
-                                    elif int(days) == 1:
-                                        print("\n\nProgressing by 1 day...")
-                                        Advance_Day(Current_Info,Bounties,1)
-                                        print("\n----------------New Day----------------\n", Get_Date_Info(Current_Info), "\n---------------------------------------\n")
-                                    else:
-                                        print("\n\nProgressing by", int(days), "days...")
-                                        Advance_Day(Current_Info,Bounties,int(days))
-                                        print("\n----------------New Day----------------\n", Get_Date_Info(Current_Info), "\n---------------------------------------\n")
-                                    cont = False
-                                case "N":
-                                    confirm = False
-                                case _:
-                                    print("\nInvalid Response.")
-                    except:
-                        print("\nInvalid response.")                    
+                    #try:
+                    confirm = True
+                    while confirm:
+                        inp = "Is this the days intended -> " + str(int(days)) + "? (Y or N)   "
+                        ans = input(inp)
+                        match ans:
+                            case "Y":
+                                confirm = False
+                                if int(days) <= 0:
+                                    print("\nCanceling day progression...\n")
+                                elif int(days) == 1:
+                                    print("\n\nProgressing by 1 day...")
+                                    Advance_Day(Current_Info,Bounties,1)
+                                    print("\n----------------New Day----------------\n", Get_Date_Info(Current_Info), "\n---------------------------------------\n")
+                                else:
+                                    print("\n\nProgressing by", int(days), "days...")
+                                    Advance_Day(Current_Info,Bounties,int(days))
+                                    print("\n----------------New Day----------------\n", Get_Date_Info(Current_Info), "\n---------------------------------------\n")
+                                cont = False
+                            case "N":
+                                confirm = False
+                            case _:
+                                print("\nInvalid Response.")
+                    #except:
+                        #print("\nInvalid response.")                    
                 cont = True
             case "3":
                 #Assigning local variables
@@ -470,7 +480,7 @@ def main():
                 #prints the bounty display message
                 print("\n---------------------------------------\n",display,"\n---------------------------------------\n")
             case "4":
-                print("Which player would you like to clear a bounty from?")
+                print("\nWhich player would you like to clear a bounty from? (Y or N)")
                 removal = "None"
                 
                 for player in Players:
@@ -488,22 +498,29 @@ def main():
                                     print("\nInvalid Response.\n")                            
                         cont = True
                 if removal != "None":
-                    print("Which bounty would you like to remove from " + str(removal) + "?")
+                    print("\nWhich bounty would you like to remove from " + str(removal) + "?")
                     disp = Display_Bounties(Bounties, removal)
                     print(disp[1])
                     if disp[1] != "\nThis player has no bounties.\n":
                         ans = input("Please type a number:   ")
                         try:
-                            if int(ans) != 0:
+                            if int(ans) > 0:
                                 Remove_Bounty(Bounties, removal,  disp[0], int(ans))
+                                print("\nBounty #" + ans + " has been removed from " + removal + "...\n")
+                            else:
+                                print("\nCanceling bounty removal...\n")
                         except:
                             print("\nInvalid Input...\nCanceling bounty removal...\n")
                     
                 else:
-                    print("\nCanceling bounty removal...\n")
-                
-                    
+                    print("\nCanceling bounty removal...\n")    
             case "5":
+                print("\n--------------All Bounties--------------\n")
+                #Display bounties for each player
+                for player in Players:
+                    print(player + "'s bounties:")
+                    print(Display_Bounties(Bounties, player)[1])
+            case "6":
                 print("\nGood Bye.\n")
                 cont = False
             case _:
