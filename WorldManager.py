@@ -416,7 +416,7 @@ def main():
                 
                 # Calculating the bounty
                 while cont:
-                    severity = input("What is the severity of the crime (1-100)?   ")
+                    severity = input("What is the severity of the crime (1-100)\n(1: Homelessguy   20: Commoner   40: Shopkeeper   60: Nobleman   80: Diplomats   100: Royalty)?   ")
                     if int(severity) <= 100 and int(severity) >= 1:
                         bounty = Calculate_Bounty(bounty, int(severity))
                         cont = False
